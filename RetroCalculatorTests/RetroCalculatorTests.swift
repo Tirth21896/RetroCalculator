@@ -7,7 +7,6 @@
 //
 
 import XCTest
-@testable import RetroCalculator
 
 class RetroCalculatorTests: XCTestCase {
     

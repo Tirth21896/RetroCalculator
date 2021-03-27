@@ -26,13 +26,13 @@ class ViewController: UIViewController {
         case Subtract = "-"
         case Add = "+"
         case Empty = "Empty"
-        
     }
     
     var currentOperation = Operation.Empty
     var leftValString  = ""
     var rightValString = ""
     var result = ""
+    var didPressEqual = false
     
     
     override func viewDidLoad() {
@@ -46,7 +46,6 @@ class ViewController: UIViewController {
             try btnSound = AVAudioPlayer(contentsOf: soundURL) //try if the sound file is there or not
             btnSound.prepareToPlay()
         } catch let err as NSError {
-            
             print(err.debugDescription)
         }
     }
@@ -54,9 +53,7 @@ class ViewController: UIViewController {
     
     //now the sound got loaded into URL And how do we actually play it !!!!
     @IBAction func numberPressed(sender: UIButton){
-        
         PlaySound()
-        
         //number can be get by sender as its that button
         
         runningNumber += "\(sender.tag)"
@@ -67,19 +64,23 @@ class ViewController: UIViewController {
     
     @IBAction func OnDividePressed (sender : AnyObject){
         processOpertion(operation: .Divide)
+        didPressEqual = false
     }
     @IBAction func OnMultiplyPressed (sender : AnyObject){
         processOpertion(operation: .Multiply)
+        didPressEqual = false
     }
     @IBAction func OnAddPressed (sender : AnyObject){
         processOpertion(operation: .Add)
+        didPressEqual = false
     }
     @IBAction func OnSubtractPressed (sender : AnyObject){
         processOpertion(operation: .Subtract)
+        didPressEqual = false
     }
     @IBAction func OnEqualClicked(sender: AnyObject){
-        
         processOpertion(operation: currentOperation)
+        didPressEqual = true
     }
     
     
@@ -97,15 +98,13 @@ class ViewController: UIViewController {
         PlaySound()
         
         if currentOperation != Operation.Empty{
-            
             // So a user selected an operator, but then selected another operator that is what this check is for.
             if runningNumber != ""{
                 rightValString = runningNumber
                 runningNumber = ""
-                
+        
                 if currentOperation == Operation.Multiply{
                     result = "\(Double(leftValString)! * Double(rightValString)!)"
-                    
                 }else if currentOperation == Operation.Divide{
                     result = "\(Double(leftValString)! / Double(rightValString)!)"
                 }else if currentOperation == Operation.Add{
@@ -117,18 +116,46 @@ class ViewController: UIViewController {
                 leftValString = result
                 OuputLabel.text = result
             }
-            currentOperation = operation
-            
         } else{
             //this is the first time when the operator has been pressed
             leftValString = runningNumber
             runningNumber = ""
-            currentOperation = operation
-            
         }
+        currentOperation = operation
+        if (didPressEqual) {
+            currentOperation = .Empty
+        }
+        
     }
     
-
-
 }
+
+extension UITextField {
+    private func actionHandleBlock(action:(()->())? = nil) {
+        struct __ {
+            var closure: (() -> Void)?
+            typealias EmptyCallback = ()->()
+            static var action: [EmptyCallback] = []
+        }
+        if action != nil {
+           // _.action![(_.action?.count)!] = action!
+            self.tag = (__.action.count)
+            __.action.append(action!)
+        } else {
+            let exe = __.action[self.tag]
+            exe()
+        }
+    }
+
+    @objc private func triggerActionHandleBlock() {
+        self.actionHandleBlock()
+    }
+
+    func addAction(forControlEvents control: UIControl.Event, ForAction action: @escaping () -> Void) {
+        self.actionHandleBlock(action: action)
+        self.addTarget(self, action: #selector(triggerActionHandleBlock), for: control)
+    }
+}
+
+
 
